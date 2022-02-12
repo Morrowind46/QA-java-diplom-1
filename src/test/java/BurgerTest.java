@@ -1,6 +1,10 @@
 import org.hamcrest.MatcherAssert;
 import org.junit.Assert;
 import org.junit.Test;
+import org.junit.runner.RunWith;
+import org.mockito.Mock;
+import org.mockito.Mockito;
+import org.mockito.junit.MockitoJUnitRunner;
 
 import java.util.ArrayList;
 import java.util.List;
@@ -8,13 +12,21 @@ import java.util.List;
 import static org.hamcrest.CoreMatchers.notNullValue;
 import static org.junit.Assert.assertEquals;
 
+@RunWith(MockitoJUnitRunner.class)
+
 public class BurgerTest {
+
+    @Mock
+    Bun bun;
+    @Mock
+    Ingredient ingredient;
+
+    Burger burger = new Burger();
 
     @Test
     public void setBunsTest() {
         //Arrange
         Burger burger = new Burger();
-        Bun bun = new Bun("name", 100);
         //Act
         burger.setBuns(bun);
         //Assert
@@ -23,83 +35,74 @@ public class BurgerTest {
 
     @Test
     public void addIngredientTest () {
-        //Arrange
-        Burger burger = new Burger();
-        Ingredient ingredient = new Ingredient(IngredientType.SAUCE, "hot sauce", 100);
-        List<Ingredient> expectedIngredients = new ArrayList<>();
-        expectedIngredients.add(ingredient);
-        //Act
+
         burger.addIngredient(ingredient);
-        //Assert
-        assertEquals(expectedIngredients, burger.ingredients);
-        //Если замокать Burger, то List<Ingredient> = null, ->
-        //-> без мока List<Ingredient> = [] - в созданный список можно добавлять значения, а в null нет
+
+        int actualResult = burger.ingredients.size();
+        int expectedResult = 1;
+
+        assertEquals("The burger size is not correct",expectedResult, actualResult);
     }
 
     @Test
     public void removeIngredientTest() {
-        //Arrange
-        Burger burger = new Burger();
-        Ingredient ingredient = new Ingredient(IngredientType.SAUCE, "hot sauce", 100);
-        burger.ingredients.add(ingredient);
-        List<Ingredient> expectedIngredients = new ArrayList<>();
-        //Проверка, что список не пустой
-        MatcherAssert.assertThat("New ingredient no added", burger.ingredients, notNullValue());
-        //Act
+
+        burger.addIngredient(ingredient);
         burger.removeIngredient(0);
-        //Assert
-        //Проверка, что добавленное значение удалилось
-        Assert.assertEquals("New ingredient not removed", burger.ingredients, expectedIngredients);
+
+        int actualResult = burger.ingredients.size();
+        int expectedResult = 0;
+
+        assertEquals("The burger size is not correct",expectedResult, actualResult);
     }
 
     @Test
     public void moveIngredientTest() {
-        //Arrange
-        Burger burger = new Burger();
-        Ingredient firstIngredient = new Ingredient(IngredientType.SAUCE, "hot sauce", 100);
-        Ingredient secondIngredient = new Ingredient(IngredientType.SAUCE, "sour cream", 200);
-        List<Ingredient> actualIngredients = burger.ingredients;
-        actualIngredients.add(firstIngredient);
-        actualIngredients.add(secondIngredient);
-        List<Ingredient> expectedIngredients = new ArrayList<>();
-        expectedIngredients.add(firstIngredient);
-        expectedIngredients.add(secondIngredient);
-        //Act
-        burger.moveIngredient(1,0);
-        //Assert
-        Assert.assertNotEquals(actualIngredients, expectedIngredients);
-        assertEquals(actualIngredients.get(0), expectedIngredients.get(1));
+
+        burger.addIngredient(new Ingredient(IngredientType.FILLING, "dinosaur", 200));
+        burger.addIngredient(new Ingredient(IngredientType.SAUCE, "chili sauce", 300));
+        burger.moveIngredient(0, 1);
+
+        String actualResult = burger.ingredients.get(1).name;
+        String expectedResult = "dinosaur";
+
+        assertEquals("The burger ingredient is not correct",expectedResult, actualResult);
     }
 
     @Test
-    public void getPriseReturnBurgerPrice() {
+    public void getPriseTest() {
         //Arrange
         Burger burger = new Burger();
-        Ingredient ingredient = new Ingredient(IngredientType.SAUCE, "hot sauce", 100);
-        burger.ingredients.add(ingredient);
-        burger.bun = new Bun("name", 10);
-        float expectedPrice = 120;
+        burger.setBuns(bun);
+        burger.addIngredient(ingredient);
+
+        Mockito.when(bun.getPrice()).thenReturn(2f);
+        Mockito.when(ingredient.getPrice()).thenReturn(2f);
+        float expectedPrice = 6;
         //Act
         float actualPrice = burger.getPrice();
+        // System.out.println(actualPrice);
         //Assert
         assertEquals("Wrong price", expectedPrice, actualPrice, 0);
     }
 
     @Test
     public void getReceiptReturnBurgerReceipt() {
-        Burger burger = new Burger();
-        Ingredient ingredient = new Ingredient(IngredientType.SAUCE, "hot sauce", 100);
-        burger.ingredients.add(ingredient);
-        burger.bun = new Bun("name", 10);
-        String expectedReceipt = "(==== name ====)\n" +
-                "= sauce hot sauce =\n" +
-                "(==== name ====)\n" +
-                "\n" +
-                "Price: 120,000000" +
-                "\n";
-        String actualReceipt = burger.getReceipt();
-        assertEquals("Wrong receipt", expectedReceipt, actualReceipt);
-        System.out.println(actualReceipt);
+
+        burger.setBuns(bun);
+        burger.addIngredient(ingredient);
+
+        Mockito.when(bun.getName()).thenReturn("black bun");
+        Mockito.when(bun.getPrice()).thenReturn(300f);
+        Mockito.when(ingredient.getType()).thenReturn(IngredientType.FILLING);
+        Mockito.when(ingredient.getName()).thenReturn("dinosaur");
+        Mockito.when(ingredient.getPrice()).thenReturn(300f);
+
+        String actualResult = burger.getReceipt();
+        String expectedResult = "(==== black bun ====)\n= filling dinosaur =\n(==== black bun ====)\n\nPrice: 900,000000\n";
+
+        assertEquals("The burger receipt is not correct",expectedResult, actualResult);
     }
+
 }
 
